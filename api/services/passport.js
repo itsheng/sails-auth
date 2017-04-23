@@ -117,6 +117,7 @@ passport.connect = function (req, query, profile, next) {
                 user = existingUser;
                 return sails.models.passport.create(_.extend({ user: user.id }, query))
                 .then(function (passport) {
+                  saveProfile(profile, passport.provider, user.id);
                   next(null, user);
                 })
                 .catch(next);
@@ -127,6 +128,7 @@ passport.connect = function (req, query, profile, next) {
                   return sails.models.passport.create(_.extend({ user: user.id }, query));
                 })
                 .then(function (passport) {
+                  saveProfile(profile, passport.provider, user.id);
                   next(null, user);
                 })
                 .catch(next);
@@ -176,6 +178,18 @@ passport.connect = function (req, query, profile, next) {
     })
     .catch(next);
 };
+
+saveProfile = function(profile, provider, user) {
+  // Save user profile for later use
+  sails.models.socialprofile.findOne({
+      provider: provider,
+      user: user
+  }).then(p => {
+    if(!p) {
+      return sails.models.socialprofile.create(_.extend({ user: user }, profile));
+    }
+  })
+}
 
 /**
  * Create an authentication endpoint
