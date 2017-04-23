@@ -110,16 +110,29 @@ passport.connect = function (req, query, profile, next) {
         //           authentication provider.
         // Action:   Create a new user and assign them a passport.
         if (!passport) {
-          return sails.models.user.create(user)
-            .then(function (_user) {
-              user = _user;
-              return sails.models.passport.create(_.extend({ user: user.id }, query));
-            })
-            .then(function (passport) {
-              next(null, user);
-            })
-            .catch(next);
-
+          // Double check whether the user already has an account with the same email address
+          return sails.models.user.findOne({email: user.email}).then(
+            existingUser => {
+              if(existingUser) {
+                user = existingUser;
+                return sails.models.passport.create(_.extend({ user: user.id }, query))
+                .then(function (passport) {
+                  next(null, user);
+                })
+                .catch(next);
+              } else {
+                return sails.models.user.create(user)
+                .then(function (_user) {
+                  user = _user;
+                  return sails.models.passport.create(_.extend({ user: user.id }, query));
+                })
+                .then(function (passport) {
+                  next(null, user);
+                })
+                .catch(next);
+              }
+            }
+          );
         }
         // Scenario: An existing user is trying to log in using an already
         //           connected passport.
