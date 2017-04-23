@@ -179,7 +179,7 @@ passport.connect = function (req, query, profile, next) {
     .catch(next);
 };
 
-saveProfile = function(profile, provider, user) {
+var saveProfile = function(profile, provider, user) {
   // Save user profile for later use
   sails.models.socialprofile.findOne({
       provider: provider,
@@ -189,7 +189,7 @@ saveProfile = function(profile, provider, user) {
       return sails.models.socialprofile.create(_.extend({ user: user }, profile));
     }
   })
-}
+};
 
 /**
  * Create an authentication endpoint
