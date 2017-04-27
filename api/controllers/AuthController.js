@@ -79,7 +79,7 @@ module.exports = {
 
     sails.services.passport.callback(req, res, function (err, user, info, status) {
       if (err || !user) {
-        if(info) {
+        if(info && info.tags) {
           // This missing info could cause some issues if you have winston-loggly integrated.
           sails.log.warn(user, err, info, status);
         } else {
