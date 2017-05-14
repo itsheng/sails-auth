@@ -73,7 +73,7 @@ module.exports = {
       else {
         // make sure the server always returns a response to the client
         // i.e passport-local bad username/email or password
-        res.send(403, err);
+        res.redirect('/auth/error');
       }
     }
 
