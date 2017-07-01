@@ -169,6 +169,13 @@ passport.connect = function (req, query, profile, next) {
             })
             .catch(next);
         }
+        // Scenario: This user wants to verify his LinkedIn profile and populate his LinkedIn profile.
+        if (passport && passport.provider === "linkedin") {
+          return sails.models.passport.create(_.extend({ user: req.user.id }, query)).then(function (passport) {
+            saveProfile(profile, passport.provider, req.user.id);
+            next(null, req.user);
+          })['catch'](next);
+        }
         // Scenario: The user is a nutjob or spammed the back-button.
         // Action:   Simply pass along the already established session.
         else {
