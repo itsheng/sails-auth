@@ -163,18 +163,18 @@ passport.connect = function (req, query, profile, next) {
         //           passport.
         // Action:   Create and assign a new passport to the user.
         if (!passport) {
-          return sails.models.passport.create(_.extend({ user: req.user.id }, query))
-            .then(function (passport) {
+          if(!req.session.isLinkedinVerification) {
+            return sails.models.passport.create(_.extend({ user: req.user.id }, query)).then(function (passport) {
               next(null, req.user);
-            })
-            .catch(next);
-        }
-        // Scenario: This user wants to verify his LinkedIn profile and populate his LinkedIn profile.
-        if (passport && passport.provider === "linkedin") {
-          return sails.models.passport.create(_.extend({ user: req.user.id }, query)).then(function (passport) {
-            saveProfile(profile, passport.provider, req.user.id);
+            })['catch'](next);
+          } else {
+            // Scenario: This user wants to verify his LinkedIn profile and populate his LinkedIn profile.
+            // Action: Create a new social profile for this user and don't create a passport.
+            if (provider === "linkedin") {
+              saveProfile(profile, provider, req.user.id);
+            }
             next(null, req.user);
-          })['catch'](next);
+          }
         }
         // Scenario: The user is a nutjob or spammed the back-button.
         // Action:   Simply pass along the already established session.
