@@ -94,7 +94,6 @@ passport.connect = function (req, query, profile, next) {
   if (_.has(profile, 'username')) {
     user.username = profile.username;
   }
-
   // If neither an email or a username was available in the profile, we don't
   // have a way of identifying the user in the future. Throw an error and let
   // whoever's next in the line take care of it.
@@ -141,7 +140,8 @@ passport.connect = function (req, query, profile, next) {
 
         // Save any updates to the Passport before moving on
         return passport.save().then(function () {
-
+          // Update existing social profile
+          saveProfile(profile, passport.provider, passport.user);
           // Fetch the user associated with the Passport
           return sails.models.user.findOne(passport.user);
         }).then(function (user) {
@@ -183,10 +183,12 @@ var saveProfile = function saveProfile(profile, provider, user) {
   }).then(function (p) {
     if (!p) {
       return sails.models.socialprofile.create(_.extend({ user: user }, profile));
+    } else {
+      // The user might have multiple social profiles
+      return sails.models.socialprofile.update({ user: user, provider: provider }, _.extend({ user: user }, profile));
     }
   });
 };
-
 /**
  * Create an authentication endpoint
  *
