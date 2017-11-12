@@ -176,6 +176,12 @@ passport.connect = function (req, query, profile, next) {
 };
 
 var saveProfile = function saveProfile(profile, provider, user) {
+  if(profile.id) {
+    sails.log.debug('fix profile ID')
+    let lid = profile.id
+    delete profile.id
+    profile.lid = lid
+  }
   // Save user profile for later use
   sails.models.socialprofile.findOne({
     provider: provider,
