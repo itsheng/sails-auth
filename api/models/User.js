@@ -19,8 +19,10 @@ module.exports = {
       required: true
     },
     email: {
-      type: 'email',
+      type: 'string',
       unique: true,
+      required: true,
+      isEmail: true,
     },
     passports: {
       collection: 'Passport',
