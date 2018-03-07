@@ -5,7 +5,6 @@
 *This repo is forked from langateam/sails-auth*
 
 [![NPM version][npm-image]][npm-url]
-[![Build status][travis-image]][travis-url]
 [![Dependency Status][daviddm-image]][daviddm-url]
 
 [Passport](http://passportjs.org/)-based User Authentication system for Sails.js applications.
@@ -77,10 +76,8 @@ MIT
 - [Ryan Quinn](https://github.com/ryanwilliamquinn)
 - [Contributors](https://github.com/langateam/sails-auth/graphs/contributors)
 
-[npm-image]: https://img.shields.io/npm/v/sails-auth.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/sails-auth
-[travis-image]: https://img.shields.io/travis/langateam/sails-auth.svg?style=flat-square
-[travis-url]: https://travis-ci.org/langateam/sails-auth
+[npm-image]: https://img.shields.io/npm/v/sails-auth-new.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/sails-auth-new
 [daviddm-image]: http://img.shields.io/david/langateam/sails-auth.svg?style=flat-square
 [daviddm-url]: https://david-dm.org/langateam/sails-auth
 [hacktober-image]: http://i.imgur.com/FM9yVCI.png
