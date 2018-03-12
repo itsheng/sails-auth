@@ -36,7 +36,7 @@ Also set the bcrypt config for salt rounds here and the appUrl.
      */
     rounds: 8
   },
-  paspport: {
+  passport: {
     /**
      * Strategies go here
      */
