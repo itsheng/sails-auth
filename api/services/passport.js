@@ -133,21 +133,25 @@ passport.connect = function (req, query, profile, next) {
       //           connected passport.
       // Action:   Get the user associated with the passport.
       else {
-        // If the tokens have changed since the last session, update them
-        if (_.has(query, 'tokens') && query.tokens != passport.tokens) {
-          passport.tokens = query.tokens;
-        }
+          // If the tokens have changed since the last session, update them
+          if (_.has(query, 'tokens') && query.tokens != passport.tokens) {
+            passport.tokens = query.tokens;
+          }
 
-        // Save any updates to the Passport before moving on
-        return passport.save().then(function () {
-          // Update existing social profile
-          saveProfile(profile, passport.provider, passport.user);
-          // Fetch the user associated with the Passport
-          return sails.models.user.findOne(passport.user);
-        }).then(function (user) {
-          next(null, user);
-        })['catch'](next);
-      }
+          // Save any updates to the Passport before moving on
+          return passport.save().then(function () {
+            // Update existing social profile
+            saveProfile(profile, passport.provider, passport.user);
+            // Fetch the user associated with the Passport
+            return sails.models.user.findOne(passport.user);
+          }).then(function (user) {
+            if (!user) {
+              // In this case, we need to reset this user's passport
+              sails.models.passport.destroy(passport.id).exec(err => { sails.log.debug('clear passport for invalid user' + err);});
+            }
+            next(null, user);
+          })['catch'](next);
+        }
     } else {
       // Scenario: A user is currently logged in and trying to connect a new
       //           passport.
@@ -166,9 +170,15 @@ passport.connect = function (req, query, profile, next) {
           next(null, req.user);
         }
       }
-      // Scenario: The user is a nutjob or spammed the back-button.
-      // Action:   Simply pass along the already established session.
-      else {
+      else if(passport.user !== req.user.id){
+        // Scenario: Multiple user accounts using the same linked profile to verify
+        if (provider === "linkedin") {
+          saveProfile(profile, provider, req.user.id);
+        }
+        next(null, req.user);
+      } else {
+        // Scenario: The user is a nutjob or spammed the back-button.
+        // Action:   Simply pass along the already established session.
         next(null, req.user);
       }
     }
@@ -176,22 +186,26 @@ passport.connect = function (req, query, profile, next) {
 };
 
 var saveProfile = function saveProfile(profile, provider, user) {
-  if(profile.id) {
-    sails.log.debug('fix profile ID')
-    let lid = profile.id
-    delete profile.id
-    profile.lid = lid
+  if (profile.id) {
+    sails.log.debug('fix profile ID');
+    var lid = profile.id;
+    delete profile.id;
+    profile.lid = lid;
   }
   // Save user profile for later use
-  sails.models.socialprofile.findOne({
+  return sails.models.socialprofile.findOne({
     provider: provider,
     user: user
   }).then(function (p) {
     if (!p) {
-      return sails.models.socialprofile.create(_.extend({ user: user }, profile));
+      return sails.models.socialprofile.create(_.extend({ user: user }, profile)).then(function(p) {
+        sails.log.debug('New social profile created for user ' + user);
+      });
     } else {
       // The user might have multiple social profiles
-      return sails.models.socialprofile.update({ user: user, provider: provider }, _.extend({ user: user }, profile));
+      return sails.models.socialprofile.update({ user: user, provider: provider }, _.extend({ user: user }, profile)).then(function(p) {
+        sails.log.debug('Social profile updated for user ' + user);
+      });
     }
   });
 };
