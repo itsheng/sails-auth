@@ -39,7 +39,7 @@
     "base64url": "^2.0.0",
     "bcryptjs": "^2.2",
     "lodash": "^4.16",
-    "marlinspike": "^1.0",
+    "marlinspike": "github:Erbolking/marlinspike",
     "passport": "^0.3",
     "passport-http": "^0.3",
     "passport-http-bearer": "^1.0.1",
