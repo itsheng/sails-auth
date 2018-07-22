@@ -29,7 +29,10 @@
     "instagram",
     "youtube"
   ],
-  "author": ["Travis Webb <me@traviswebb.com>", "Dominic Rico Gómez <hello@coderocket.me>"],
+  "author": [
+    "Travis Webb <me@traviswebb.com>",
+    "Dominic Rico Gómez <hello@coderocket.me>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/dominicrico/sails-auth/issues"
