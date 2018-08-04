@@ -139,27 +139,27 @@ passport.connect = function (req, query, profile, next) {
 			//           connected passport.
 			// Action:   Get the user associated with the passport.
 			else {
-				// If the tokens have changed since the last session, update them
-				if (_.has(query, 'tokens') && query.tokens != passport.tokens) {
-					passport.tokens = query.tokens;
-				}
-
-				// Save any updates to the Passport before moving on
-				return passport.save().then(function () {
-					// Update existing social profile
-					saveProfile(profile, passport.provider, passport.user);
-					// Fetch the user associated with the Passport
-					return sails.models.user.findOne(passport.user);
-				}).then(function (user) {
-					if (!user) {
-						// In this case, we need to reset this user's passport
-						sails.models.passport.destroy(passport.id).exec(err => {
-							sails.log.debug('clear passport for invalid user' + err);
-						});
+					// If the tokens have changed since the last session, update them
+					if (_.has(query, 'tokens') && query.tokens != passport.tokens) {
+						passport.tokens = query.tokens;
 					}
-					next(null, user);
-				})['catch'](next);
-			}
+
+					// Save any updates to the Passport before moving on
+					return passport.save().then(function () {
+						// Update existing social profile
+						saveProfile(profile, passport.provider, passport.user);
+						// Fetch the user associated with the Passport
+						return sails.models.user.findOne(passport.user);
+					}).then(function (user) {
+						if (!user) {
+							// In this case, we need to reset this user's passport
+							sails.models.passport.destroy(passport.id).exec(function (err) {
+								sails.log.debug('clear passport for invalid user' + err);
+							});
+						}
+						next(null, user);
+					})['catch'](next);
+				}
 		} else {
 			// Scenario: A user is currently logged in and trying to connect a new
 			//           passport.
@@ -392,7 +392,9 @@ passport.loadStrategies = function () {
 
 			if (!callback) {
 				callback = path.join('auth', key, 'callback');
-			}
+      }
+      
+      Strategy = strategies[key].strategy;
 
 			var baseUrl = '';
 			if (sails.config.appUrl && sails.config.appUrl !== null) {
@@ -414,20 +416,11 @@ passport.loadStrategies = function () {
 					options.profile = true;
 					break;
 			}
-
-			switch (protocol) {
-				case 'oauth':
-				case 'oauth2':
-					options.callbackURL = url.resolve(baseUrl, callback);
-					break;
-
-				case 'openid':
-					options.returnURL = url.resolve(baseUrl, callback);
-					options.realm = baseUrl;
-					options.profile = true;
-					break;
-			}
-
+			// Merge the default options with any options defined in the config. All
+			// defaults can be overriden, but I don't see a reason why you'd want to
+			// do that.
+			_.extend(options, strategies[key].options);
+			
 			passport.use(new Strategy(options, this.protocols[protocol]));
 		}
 	}, passport));
