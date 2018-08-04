@@ -302,167 +302,168 @@ passport.callback = function (req, res, next) {
 		// the provider will redirect the user back to the application at
 		//     /auth/:provider/callback
 		this.authenticate(provider, options)(req, res, req.next);
-	};
+	}
+};
 
-	/**
-	 * Create an authentication callback endpoint
-	 *
-	 * For more information on authentication in Passport.js, check out:
-	 * http://passportjs.org/guide/authenticate/
-	 *
-	 * @param {Object}   req
-	 * @param {Object}   res
-	 * @param {Function} next
-	 */
-	passport.callback = function (req, res, next) {
-		var provider = req.param('provider', 'local');
-		var action = req.param('action');
+/**
+ * Create an authentication callback endpoint
+ *
+ * For more information on authentication in Passport.js, check out:
+ * http://passportjs.org/guide/authenticate/
+ *
+ * @param {Object}   req
+ * @param {Object}   res
+ * @param {Function} next
+ */
+passport.callback = function (req, res, next) {
+	var provider = req.param('provider', 'local');
+	var action = req.param('action');
 
-		// Passport.js wasn't really built for local user registration, but it's nice
-		// having it tied into everything else.
-		if (provider === 'local' && action !== undefined) {
-			if (action === 'register' && !req.user) {
-				this.protocols.local.register(req, res, next);
-			} else if (action === 'connect' && req.user) {
-				this.protocols.local.connect(req, res, next);
-			} else if (action === 'disconnect' && req.user) {
-				this.protocols.local.disconnect(req, res, next);
-			} else {
-				next(new Error('Invalid action'));
+	// Passport.js wasn't really built for local user registration, but it's nice
+	// having it tied into everything else.
+	if (provider === 'local' && action !== undefined) {
+		if (action === 'register' && !req.user) {
+			this.protocols.local.register(req, res, next);
+		} else if (action === 'connect' && req.user) {
+			this.protocols.local.connect(req, res, next);
+		} else if (action === 'disconnect' && req.user) {
+			this.protocols.local.disconnect(req, res, next);
+		} else {
+			next(new Error('Invalid action'));
+		}
+	} else {
+		if (action === 'disconnect' && req.user) {
+			this.disconnect(req, res, next);
+		} else {
+			// The provider will redirect the user to this URL after approval. Finish
+			// the authentication process by attempting to obtain an access token. If
+			// access was granted, the user will be logged in. Otherwise, authentication
+			// has failed.
+			this.authenticate(provider, next)(req, res, req.next);
+		}
+	}
+};
+/**
+ * Load all strategies defined in the Passport configuration
+ *
+ * For example, we could add this to our config to use the GitHub strategy
+ * with permission to access a users email address (even if it's marked as
+ * private) as well as permission to add and update a user's Gists:
+ *
+    github: {
+      name: 'GitHub',
+      protocol: 'oauth2',
+      scope: [ 'user', 'gist' ]
+      options: {
+        clientID: 'CLIENT_ID',
+        clientSecret: 'CLIENT_SECRET'
+      }
+    }
+*
+* For more information on the providers supported by Passport.js, check out:
+* http://passportjs.org/guide/providers/
+*
+*/
+passport.loadStrategies = function () {
+	var strategies = sails.config.custom.passport;
+
+	_.each(strategies, _.bind(function (strategy, key) {
+		var options = {
+			passReqToCallback: true
+		};
+		var Strategy;
+
+		if (key === 'local') {
+			// Since we need to allow users to login using both usernames as well as
+			// emails, we'll set the username field to something more generic.
+			_.extend(options, {
+				usernameField: 'identifier'
+			});
+
+			// Only load the local strategy if it's enabled in the config
+			if (strategies.local) {
+				Strategy = strategies[key].strategy;
+
+				passport.use(new Strategy(options, this.protocols.local.login));
 			}
 		} else {
-			if (action === 'disconnect' && req.user) {
-				this.disconnect(req, res, next);
-			} else {
-				// The provider will redirect the user to this URL after approval. Finish
-				// the authentication process by attempting to obtain an access token. If
-				// access was granted, the user will be logged in. Otherwise, authentication
-				// has failed.
-				this.authenticate(provider, next)(req, res, req.next);
+			var protocol = strategies[key].protocol;
+			var callback = strategies[key].callback;
+
+			if (!callback) {
+				callback = path.join('auth', key, 'callback');
 			}
+
+			var baseUrl = '';
+			if (sails.config.appUrl && sails.config.appUrl !== null) {
+				sails.log.warn('Please add "appUrl" to custom configuration in config/custom.js');
+				baseUrl = sails.config.appUrl;
+			} else {
+				baseUrl = sails.config.custom.appUrl;
+			}
+
+			switch (protocol) {
+				case 'oauth':
+				case 'oauth2':
+					options.callbackURL = url.resolve(baseUrl, callback);
+					break;
+
+				case 'openid':
+					options.returnURL = url.resolve(baseUrl, callback);
+					options.realm = baseUrl;
+					options.profile = true;
+					break;
+			}
+
+			switch (protocol) {
+				case 'oauth':
+				case 'oauth2':
+					options.callbackURL = url.resolve(baseUrl, callback);
+					break;
+
+				case 'openid':
+					options.returnURL = url.resolve(baseUrl, callback);
+					options.realm = baseUrl;
+					options.profile = true;
+					break;
+			}
+
+			passport.use(new Strategy(options, this.protocols[protocol]));
 		}
-	};
-	/**
-	 * Load all strategies defined in the Passport configuration
-	 *
-	 * For example, we could add this to our config to use the GitHub strategy
-	 * with permission to access a users email address (even if it's marked as
-	 * private) as well as permission to add and update a user's Gists:
-	 *
-	    github: {
-	      name: 'GitHub',
-	      protocol: 'oauth2',
-	      scope: [ 'user', 'gist' ]
-	      options: {
-	        clientID: 'CLIENT_ID',
-	        clientSecret: 'CLIENT_SECRET'
-	      }
-	    }
-	*
-	* For more information on the providers supported by Passport.js, check out:
-	* http://passportjs.org/guide/providers/
-	*
-	*/
-	passport.loadStrategies = function () {
-		var strategies = sails.config.custom.passport;
+	}, passport));
+};
 
-		_.each(strategies, _.bind(function (strategy, key) {
-			var options = {
-				passReqToCallback: true
-			};
-			var Strategy;
+/**
+ * Disconnect a passport from a user
+ *
+ * @param  {Object} req
+ * @param  {Object} res
+ */
+passport.disconnect = function (req, res, next) {
+	var user = req.user;
+	var provider = req.param('provider');
 
-			if (key === 'local') {
-				// Since we need to allow users to login using both usernames as well as
-				// emails, we'll set the username field to something more generic.
-				_.extend(options, {
-					usernameField: 'identifier'
-				});
+	return sails.models.passport.findOne({
+		provider: provider,
+		user: user.id
+	}).then(function (passport) {
+		return sails.models.passport.destroy(passport.id);
+	}).then(function (error) {
+		next(null, user);
+		return user;
+	})['catch'](next);
+};
 
-				// Only load the local strategy if it's enabled in the config
-				if (strategies.local) {
-					Strategy = strategies[key].strategy;
+passport.serializeUser(function (user, next) {
+	next(null, user.id);
+});
 
-					passport.use(new Strategy(options, this.protocols.local.login));
-				}
-			} else {
-				var protocol = strategies[key].protocol;
-				var callback = strategies[key].callback;
+passport.deserializeUser(function (id, next) {
+	return sails.models.user.findOne(id).then(function (user) {
+		next(null, user || null);
+		return user;
+	})['catch'](next);
+});
 
-				if (!callback) {
-					callback = path.join('auth', key, 'callback');
-				}
-
-				var baseUrl = '';
-				if (sails.config.appUrl && sails.config.appUrl !== null) {
-					sails.log.warn('Please add "appUrl" to custom configuration in config/custom.js');
-					baseUrl = sails.config.appUrl;
-				} else {
-					baseUrl = sails.config.custom.appUrl;
-				}
-
-				switch (protocol) {
-					case 'oauth':
-					case 'oauth2':
-						options.callbackURL = url.resolve(baseUrl, callback);
-						break;
-
-					case 'openid':
-						options.returnURL = url.resolve(baseUrl, callback);
-						options.realm = baseUrl;
-						options.profile = true;
-						break;
-				}
-
-				switch (protocol) {
-					case 'oauth':
-					case 'oauth2':
-						options.callbackURL = url.resolve(baseUrl, callback);
-						break;
-
-					case 'openid':
-						options.returnURL = url.resolve(baseUrl, callback);
-						options.realm = baseUrl;
-						options.profile = true;
-						break;
-				}
-
-				passport.use(new Strategy(options, this.protocols[protocol]));
-			}
-		}, passport));
-	};
-
-	/**
-	 * Disconnect a passport from a user
-	 *
-	 * @param  {Object} req
-	 * @param  {Object} res
-	 */
-	passport.disconnect = function (req, res, next) {
-		var user = req.user;
-		var provider = req.param('provider');
-
-		return sails.models.passport.findOne({
-			provider: provider,
-			user: user.id
-		}).then(function (passport) {
-			return sails.models.passport.destroy(passport.id);
-		}).then(function (error) {
-			next(null, user);
-			return user;
-		})['catch'](next);
-	};
-
-	passport.serializeUser(function (user, next) {
-		next(null, user.id);
-	});
-
-	passport.deserializeUser(function (id, next) {
-		return sails.models.user.findOne(id).then(function (user) {
-			next(null, user || null);
-			return user;
-		})['catch'](next);
-	});
-
-	module.exports = passport;
+module.exports = passport;
 }
