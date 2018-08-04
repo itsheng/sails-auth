@@ -466,4 +466,3 @@ passport.deserializeUser(function (id, next) {
 });
 
 module.exports = passport;
-}
