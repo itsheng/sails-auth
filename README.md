@@ -1,14 +1,17 @@
 # sails-auth
 
+### Sails-Auth ready for Sails.js v1.0
+
+*This repo is forked from langateam/sails-auth*
+
 [![NPM version][npm-image]][npm-url]
-[![Build status][travis-image]][travis-url]
 [![Dependency Status][daviddm-image]][daviddm-url]
 
 [Passport](http://passportjs.org/)-based User Authentication system for Sails.js applications.
 
 ## 1. Install
 ```sh
-$ npm install sails-auth --save
+$ npm install sails-auth-new --save
 ```
 This will install `sails-auth` as a Sails Hook. The Hook uses
 [marlinspike](https://github.com/tjwebb/marlinspike) to inject the relevant
@@ -16,21 +19,27 @@ Controllers, Policies, etc into your Sails application.
 
 ## 2. Configure
 
-#### `config/passport.js`
+#### `config/custom.js`
 
 By default, the `local` and `basic` strategies are enabled. See
-[config/passport.js](https://github.com/langateam/sails-auth/blob/master/config/passport.js)
+[config/custom.js](https://github.com/dominicrico/sails-auth/blob/master/config/custom.js)
 for examples of how to add and configure additional authentication strategies.
 
-#### `config/auth.js`
+Also set the bcrypt config for salt rounds here and the appUrl.
 
 ```js
+  appUrl: 'localhost:1337', //for development
   bcrypt: {
     /**
      * Specifiy number of salt rounds to perform on password. Values >10 are
      * slow.
      */
     rounds: 8
+  },
+  passport: {
+    /**
+     * Strategies go here
+     */
   }
 ```
 
@@ -61,15 +70,15 @@ For comprehensive user account control with role-based permissioning, object own
 ## License
 MIT
 
-## Maintained By
+## Original Fork is Maintained By
 [<img src='http://i.imgur.com/Y03Jgmf.png' height='64px'>](http://langa.io)
 - [Travis Webb](https://github.com/tjwebb)
 - [Ryan Quinn](https://github.com/ryanwilliamquinn)
 - [Contributors](https://github.com/langateam/sails-auth/graphs/contributors)
 
-[npm-image]: https://img.shields.io/npm/v/sails-auth.svg?style=flat-square
-[npm-url]: https://npmjs.org/package/sails-auth
-[travis-image]: https://img.shields.io/travis/langateam/sails-auth.svg?style=flat-square
-[travis-url]: https://travis-ci.org/langateam/sails-auth
+[npm-image]: https://img.shields.io/npm/v/sails-auth-new.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/sails-auth-new
 [daviddm-image]: http://img.shields.io/david/langateam/sails-auth.svg?style=flat-square
 [daviddm-url]: https://david-dm.org/langateam/sails-auth
+[hacktober-image]: http://i.imgur.com/FM9yVCI.png
+[hacktober-url]: https://twitter.com/langateam/status/782995392212369408

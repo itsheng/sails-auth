@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports.routes = {
   'post /register': {
     controller: 'UserController',
@@ -50,5 +52,5 @@ module.exports.routes = {
     controller: 'AuthController',
     skipAssets: true,
     action: 'callback'
-  },
+  }
 };

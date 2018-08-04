@@ -1,15 +1,31 @@
+let authHook = sails.hooks.auth;
+
 import _ from 'lodash'
 import Marlinspike from 'marlinspike'
 
-class Auth extends Marlinspike {
+if (!authHook) {
+  class Auth extends Marlinspike {
 
-  constructor (sails) {
-    super(sails, module)
+    constructor(sails) {
+      super(sails, module)
+    }
+
+    configure() {
+      sails.services.passport.loadStrategies()
+    }
+
+    initialize(cb) {
+
+      sails.on('hook:orm:loaded', function() {
+        // Finish initializing custom hook
+        // Then call cb()
+        return cb();
+
+      });
+    }
   }
 
-  configure () {
-    sails.services.passport.loadStrategies()
-  }
+  authHook = Marlinspike.createSailsHook(Auth)
 }
 
-export default Marlinspike.createSailsHook(Auth)
+export default authHook;

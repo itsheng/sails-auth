@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Passport Middleware
  *
@@ -22,13 +24,12 @@
  * @param {Function} next
  */
 var http = require('http'),
-  passport = sails.services.passport,
-  _ = require('lodash');
-  
+    passport = sails.services.passport,
+    _ = require('lodash');
+
 var methods = ['login', 'logIn', 'logout', 'logOut', 'isAuthenticated', 'isUnauthenticated'];
 
 module.exports = function (req, res, next) {
-  
 
   // Initialize Passport
   passport.initialize()(req, res, function () {

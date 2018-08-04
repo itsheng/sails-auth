@@ -1,3 +1,5 @@
+'use strict';
+
 var bcrypt = require('bcryptjs');
 
 /**
@@ -10,7 +12,7 @@ function hashPassword(passport, next) {
   var config = sails.config.custom.bcrypt;
   var salt = config.salt || config.rounds;
   if (passport.password) {
-    bcrypt.hash(passport.password, salt, function(err, hash) {
+    bcrypt.hash(passport.password, salt, function (err, hash) {
       if (err) {
         delete passport.password;
         sails.log.error(err);
@@ -114,7 +116,7 @@ var Passport = {
    * @param {string}   password The password to validate
    * @param {Function} next
    */
-  validatePassword: function(password, userPassword, next) {
+  validatePassword: function validatePassword(password, userPassword, next) {
     bcrypt.compare(password, userPassword, next);
   },
 
@@ -124,7 +126,7 @@ var Passport = {
    * @param {Object}   passport The soon-to-be-created Passport
    * @param {Function} next
    */
-  beforeCreate: function(passport, next) {
+  beforeCreate: function beforeCreate(passport, next) {
     hashPassword(passport, next);
   },
 
@@ -134,7 +136,7 @@ var Passport = {
    * @param {Object}   passport Values to be updated
    * @param {Function} next
    */
-  beforeUpdate: function(passport, next) {
+  beforeUpdate: function beforeUpdate(passport, next) {
     hashPassword(passport, next);
   }
 };

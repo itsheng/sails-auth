@@ -1,3 +1,5 @@
+'use strict';
+
 var _ = require('lodash');
 //const util = require('util');
 
@@ -15,7 +17,7 @@ var _ = require('lodash');
  * @param {Function} next
  */
 
-module.exports = function(req, userprofile, next) {
+module.exports = function (req, userprofile, next) {
 
 	//sails.log.debug('delegated: connecting user', util.inspect(userprofile));
 	//sails.log.debug('delegated: session is ', util.inspect(req.session));
@@ -28,10 +30,10 @@ module.exports = function(req, userprofile, next) {
 	sails.services.passport.connect(req, query, userprofile, next);
 
 	/*
-	sails.services.passport.connect(req, query, userprofile, function(err, user) {
-		if(user!=null) sails.log.debug('delegated: got user', util.inspect(user));
-		user.profile = userprofile;
-		next(err, user);
-	});
-	*/
+ sails.services.passport.connect(req, query, userprofile, function(err, user) {
+ 	if(user!=null) sails.log.debug('delegated: got user', util.inspect(user));
+ 	user.profile = userprofile;
+ 	next(err, user);
+ });
+ */
 };

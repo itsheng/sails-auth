@@ -1,3 +1,5 @@
+'use strict';
+
 var crypto = require('crypto');
 var base64URL = require('base64url');
 var SAError = require('../../../lib/error/SAError.js');
@@ -19,11 +21,11 @@ var SAError = require('../../../lib/error/SAError.js');
  * @param {Object}   res
  * @param {Function} next
  */
-exports.register = function(user, next) {
+exports.register = function (user, next) {
   exports.createUser(user, next);
 };
 
-exports.update = function(user, next) {
+exports.update = function (user, next) {
   exports.updateUser(user, next);
 };
 
@@ -38,14 +40,14 @@ exports.update = function(user, next) {
  * @param {String}   password
  * @param {Function} next
  */
-exports.createUser = function(_user, next) {
+exports.createUser = function (_user, next) {
   var accessToken = generateToken();
   var password = _user.password;
   delete _user.password;
 
   return sails.models.user.create(_user).meta({
     fetch: true
-  }).exec(function(err, user) {
+  }).exec(function (err, user) {
     if (err) {
       sails.log(err);
 
@@ -65,7 +67,7 @@ exports.createUser = function(_user, next) {
       accessToken: accessToken
     }).meta({
       fetch: true
-    }).exec(function(err, passport) {
+    }).exec(function (err, passport) {
       if (err) {
         if (err.code === 'E_VALIDATION') {
           err = new SAError({
@@ -73,7 +75,7 @@ exports.createUser = function(_user, next) {
           });
         }
 
-        return sails.models.user.destroy(user).exec(function(destroyErr) {
+        return sails.models.user.destroy(user).exec(function (destroyErr) {
           next(destroyErr || err);
         });
       }
@@ -94,7 +96,7 @@ exports.createUser = function(_user, next) {
  * @param {String}   password
  * @param {Function} next
  */
-exports.updateUser = function(_user, next) {
+exports.updateUser = function (_user, next) {
   var password = _user.password;
   delete _user.password;
 
@@ -106,7 +108,7 @@ exports.updateUser = function(_user, next) {
 
   return sails.models.user.update(userFinder, _user).meta({
     fetch: true
-  }).exec(function(err, user) {
+  }).exec(function (err, user) {
     if (err) {
       sails.log(err);
 
@@ -125,9 +127,9 @@ exports.updateUser = function(_user, next) {
       sails.models.passport.findOne({
         protocol: 'local',
         user: user.id
-      }, function(err, passport) {
+      }, function (err, passport) {
         passport.password = password;
-        passport.save(function(err, passport) {
+        passport.save(function (err, passport) {
           if (err) {
             if (err.code === 'E_VALIDATION') {
               err = new SAError({
@@ -136,11 +138,10 @@ exports.updateUser = function(_user, next) {
             }
 
             next(err);
-
           }
 
           next(null, user);
-        })
+        });
       });
     } else {
       next(null, user);
@@ -159,15 +160,15 @@ exports.updateUser = function(_user, next) {
  * @param {Object}   res
  * @param {Function} next
  */
-exports.connect = function(req, res, next) {
+exports.connect = function (req, res, next) {
   var user = req.user,
-    password = req.param('password'),
-    Passport = sails.models.passport;
+      password = req.param('password'),
+      Passport = sails.models.passport;
 
   Passport.findOne({
     protocol: 'local',
     user: user.id
-  }, function(err, passport) {
+  }, function (err, passport) {
     if (err) {
       return next(err);
     }
@@ -179,7 +180,7 @@ exports.connect = function(req, res, next) {
         user: user.id
       }).meta({
         fetch: true
-      }).exec(function(err, passport) {
+      }).exec(function (err, passport) {
         next(err, user);
       });
     } else {
@@ -200,9 +201,9 @@ exports.connect = function(req, res, next) {
  * @param {string}   password
  * @param {Function} next
  */
-exports.login = function(req, identifier, password, next) {
+exports.login = function (req, identifier, password, next) {
   var isEmail = validateEmail(identifier),
-    query = {};
+      query = {};
 
   if (isEmail) {
     query.email = identifier;
@@ -210,7 +211,7 @@ exports.login = function(req, identifier, password, next) {
     query.username = identifier;
   }
 
-  sails.models.user.findOne(query, function(err, user) {
+  sails.models.user.findOne(query, function (err, user) {
     if (err) {
       return next(err);
     }
@@ -229,9 +230,9 @@ exports.login = function(req, identifier, password, next) {
     sails.models.passport.findOne({
       protocol: 'local',
       user: user.id
-    }, function(err, passport) {
+    }, function (err, passport) {
       if (passport) {
-        Passport.validatePassword(password, passport.password, function(err, res) {
+        Passport.validatePassword(password, passport.password, function (err, res) {
           if (err) {
             return next(err);
           }
@@ -249,8 +250,7 @@ exports.login = function(req, identifier, password, next) {
   });
 };
 
-var EMAIL_REGEX =
-  /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i;
+var EMAIL_REGEX = /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i;
 
 /**
  * Use validator module isEmail function

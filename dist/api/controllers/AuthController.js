@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Authentication Controller
  */
@@ -17,7 +19,7 @@ module.exports = {
    * @param {Object} req
    * @param {Object} res
    */
-  logout: function(req, res) {
+  logout: function logout(req, res) {
     req.logout();
     delete req.user;
     delete req.session.passport;
@@ -36,7 +38,7 @@ module.exports = {
    * @param {Object} req
    * @param {Object} res
    */
-  provider: function(req, res) {
+  provider: function provider(req, res) {
     sails.services.passport.endpoint(req, res);
   },
 
@@ -56,7 +58,7 @@ module.exports = {
    * @param {Object} req
    * @param {Object} res
    */
-  callback: function(req, res) {
+  callback: function callback(req, res) {
     var action = req.param('action');
 
     function negotiateError(err) {
@@ -73,22 +75,22 @@ module.exports = {
       }
     }
 
-    sails.services.passport.callback(req, res, function(err, user, info, status) {
+    sails.services.passport.callback(req, res, function (err, user, info, status) {
       if (err || !user) {
-        if(info && info.tags) {
+        if (info && info.tags) {
           // This missing info could cause some issues if you have winston-loggly integrated.
           sails.log.warn(user, err, info, status);
         } else {
           sails.log.warn(user, err);
         }
-        
-        if(!err && info) {
+
+        if (!err && info) {
           return negotiateError(info);
         }
         return negotiateError(err);
       }
 
-      req.login(user, function(err) {
+      req.login(user, function (err) {
         if (err) {
           sails.log.warn(err);
           return negotiateError(err);
@@ -115,7 +117,7 @@ module.exports = {
    * @param {Object} req
    * @param {Object} res
    */
-  disconnect: function(req, res) {
+  disconnect: function disconnect(req, res) {
     sails.services.passport.disconnect(req, res);
   }
 };

@@ -1,3 +1,5 @@
+'use strict';
+
 /*
  * Bearer Authentication Protocol
  *
@@ -8,10 +10,10 @@
  *
  */
 
-module.exports = function(req, token, done) {
+module.exports = function (req, token, done) {
   sails.models.passport.findOne({
     accessToken: token
-  }).exec(function(err, passport) {
+  }).exec(function (err, passport) {
     if (err) {
       return done(err);
     }
@@ -22,7 +24,7 @@ module.exports = function(req, token, done) {
 
     sails.models.user.findOne({
       id: passport.user
-    }).exec(function(err, user) {
+    }).exec(function (err, user) {
       if (err) {
         return done(err);
       }
@@ -39,5 +41,4 @@ module.exports = function(req, token, done) {
       });
     });
   });
-
 };
