@@ -145,11 +145,11 @@ passport.connect = function (req, query, profile, next) {
 					}
 
 					// Save any updates to the Passport before moving on
-					return passport.save().then(function () {
+					return Passport.update({ _id: passport.id }, passport).fetch().then(function (updatedPassport) {
 						// Update existing social profile
-						saveProfile(profile, passport.provider, passport.user);
+						saveProfile(profile, updatedPassport[0].provider, updatedPassport[0].user);
 						// Fetch the user associated with the Passport
-						return sails.models.user.findOne(passport.user);
+						return sails.models.user.findOne(updatedPassport[0].user);
 					}).then(function (user) {
 						if (!user) {
 							// In this case, we need to reset this user's passport
@@ -219,7 +219,7 @@ var saveProfile = function saveProfile(profile, provider, user) {
 				provider: provider
 			}, _.extend({
 				user: user
-			}, profile)).then(function (p) {
+			}, profile)).fetch().then(function (p) {
 				sails.log.debug('Social profile updated for user ' + user);
 			});
 		}
@@ -394,6 +394,8 @@ passport.loadStrategies = function () {
 				callback = path.join('auth', key, 'callback');
 			}
 
+			Strategy = strategies[key].strategy;
+
 			var baseUrl = '';
 			if (sails.config.appUrl && sails.config.appUrl !== null) {
 				sails.log.warn('Please add "appUrl" to custom configuration in config/custom.js');
@@ -414,19 +416,10 @@ passport.loadStrategies = function () {
 					options.profile = true;
 					break;
 			}
-
-			switch (protocol) {
-				case 'oauth':
-				case 'oauth2':
-					options.callbackURL = url.resolve(baseUrl, callback);
-					break;
-
-				case 'openid':
-					options.returnURL = url.resolve(baseUrl, callback);
-					options.realm = baseUrl;
-					options.profile = true;
-					break;
-			}
+			// Merge the default options with any options defined in the config. All
+			// defaults can be overriden, but I don't see a reason why you'd want to
+			// do that.
+			_.extend(options, strategies[key].options);
 
 			passport.use(new Strategy(options, this.protocols[protocol]));
 		}
