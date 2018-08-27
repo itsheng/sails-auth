@@ -143,9 +143,9 @@ passport.connect = function (req, query, profile, next) {
 					if (_.has(query, 'tokens') && query.tokens != passport.tokens) {
 						passport.tokens = query.tokens;
 					}
-
+					var passportId = passport.id;
 					// Save any updates to the Passport before moving on
-					return Passport.update({_id: passport.id}, passport).fetch().then(function (updatedPassport) {
+					return Passport.update({ id: passportId }, passport).fetch().then(function (updatedPassport) {
 						// Update existing social profile
 						saveProfile(profile, updatedPassport[0].provider, updatedPassport[0].user);
 						// Fetch the user associated with the Passport
@@ -153,7 +153,7 @@ passport.connect = function (req, query, profile, next) {
 					}).then(function (user) {
 						if (!user) {
 							// In this case, we need to reset this user's passport
-							sails.models.passport.destroy(passport.id).exec(function (err) {
+							sails.models.passport.destroy(passportId).exec(function (err) {
 								sails.log.debug('clear passport for invalid user' + err);
 							});
 						}
